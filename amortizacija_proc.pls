@@ -14,21 +14,23 @@ AS
     v_osnovica NUMBER;
     v_iznos_amortizacije NUMBER;
 BEGIN
+    -- Ako sredstvo ne postoji Oracle ce baciti NO_DATA_FOUND gresku
     SELECT
-        s.nabavna_vrijednost into v_osnovica,
-        s.datum_amortizacije into v_datum_amortizacije,
-        ag.stopa_amortizacije INTO v_stopa_amortizacije,
-    INNER JOIN amortizacijska_grupa ag on s.am_grupa=ag.id
-    FROM sredstvo s WHERE id=p_sredstvo_id;
+        s.nabavna_vrijednost,
+        s.datum_amortizacije,
+        ag.stopa_amortizacije
+        INTO
+            v_osnovica,
+            v_datum_amortizacije,
+            v_stopa_amortizacije
+     FROM sredstvo s
+        INNER JOIN amortizacijska_grupa ag ON s.am_grupa=ag.id
+    WHERE s.id = p_sredstvo_id
+    FOR UPDATE WAIT 5;
 
-    IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(
-            -20001,
-            'Sredstvo s ID ' || p_sredstvo_id || ' ne postoji.'
-        );
-    END IF;
-
-    IF EXTRACT(YEAR FROM v_datum_amortizacije) = EXTRACT(YEAR FROM SYSDATE) THEN
+    IF v_datum_amortizacije IS NOT NULL AND
+        EXTRACT(YEAR FROM v_datum_amortizacije) = EXTRACT(YEAR FROM SYSDATE)
+    THEN
         RAISE_APPLICATION_ERROR(
             -20002,
             'Sredstvo s ID ' || p_sredstvo_id || ' je vec amortizirano ove godine.'
@@ -38,23 +40,22 @@ BEGIN
     v_iznos_amortizacije := v_osnovica * (v_stopa_amortizacije / 100);
 
     UPDATE sredstvo SET
-            trenutna_vrijednost=(trenutna_vrijednost - v_iznos_amortizacije),
+            trenutna_vrijednost=GREATEST(trenutna_vrijednost - v_iznos_amortizacije, 0),
             ukupni_iznos_amortizacija=(ukupni_iznos_amortizacija + v_iznos_amortizacije),
             godisnji_iznos_amortizacije=v_iznos_amortizacije,
             datum_amortizacije=SYSDATE
     WHERE id=p_sredstvo_id;
 
-    IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(
-            -20003,
-            'Sredstvo s ID ' || p_sredstvo_id || ' nije ažurirano. Amortizacija neuspjela.'
-        );
-    END IF;
-
     INSERT INTO transakcije (vrsta, entity_id) VALUES ('godisnja_amortizacija', p_sredstvo_id);
 
     COMMIT;
 EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(
+            -20001,
+            'Sredstvo s ID ' || p_sredstvo_id || ' ne postoji.'
+        );
+
     WHEN OTHERS THEN
         ROLLBACK;
         RAISE;
