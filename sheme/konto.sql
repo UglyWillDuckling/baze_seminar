@@ -1,7 +1,13 @@
 CREATE TABLE konto (
-	id INT PRIMARY KEY AUTO_INCREMENT,
-	sifra INT NOT NULL,
-	naziv VARCHAR(32),
-	status_konta VARCHAR(16) NOT NULL CHECK status_konta IN ('aktivan', 'neaktivan'),
-	tip_konta VARCHAR(16) NOT NULL CHECK tip_konta IN ('dugovni', 'potrazni')
-)
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    sifra NUMBER NOT NULL,
+    naziv VARCHAR2(32),
+    status_konta VARCHAR2(16) NOT NULL,
+    tip_konta VARCHAR2(16) NOT NULL,
+
+    CONSTRAINT chk_status_konta
+        CHECK (status_konta IN ('aktivan', 'neaktivan')),
+
+    CONSTRAINT chk_tip_konta
+        CHECK (tip_konta IN ('dugovni', 'potrazni'))
+);
