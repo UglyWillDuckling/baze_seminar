@@ -72,19 +72,53 @@ ___
 
 ```mermaid
 ---
-title: Primjer
+title: Imovina
 ---
-
 erDiagram
-    ORDER_ITEM {
-        int quantity
-        float price
-    }
+	direction LR
+	transakcije {
+        number id
+		date datum  ""  
+		varchar vrsta ""  
+	}
 
+	sredstvo {
+        number id
+        id inventarni_broj
+        varchar naziv
+        varchar opis
+        date datum_aktivacije
+        varchar status
+        number trenutna_vrijednost
+        number nabavna_vrijednost
+        number godisnji_iznos_amortizacije
+        number ukupni_iznos_amortizacija
+        date datum_amortizacije
+        number am_grupa
+	}
 
-    Sredstvo }o..|| AMORTIZACIJSKA_GRUPA : pripada
-		
-		AMORTIZACIJSKA_GRUPA }o--|| KONTO : koristi
+	amortizacijska_grupa {
+        integer id
+        integer sifra
+        varchar naziv
+        decimal stopa_amortizacije
+        integer osnovni_konto
+	}
+
+	konto {
+        number sifra
+        varchar naziv
+        varchar status_konta
+        varchar tip_konta
+	}
+
+	sredstvo}o..||amortizacijska_grupa:"pripada mu"
+	amortizacijska_grupa}o--||konto:"koristi"
+
+	style transakcije stroke:#E1BEE7
+	style sredstvo stroke:#FFD600
+	style amortizacijska_grupa stroke:#FF6D00
+	style konto stroke:#2962FF
 ```
 
 
