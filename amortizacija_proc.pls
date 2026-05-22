@@ -13,6 +13,7 @@ AS
     v_stopa_amortizacije NUMBER;
     v_osnovica NUMBER;
     v_iznos_amortizacije NUMBER;
+    v_status sredstvo.status%TYPE;
 BEGIN
     -- Ako sredstvo ne postoji Oracle ce baciti NO_DATA_FOUND gresku
     SELECT
@@ -27,6 +28,13 @@ BEGIN
         INNER JOIN amortizacijska_grupa ag ON s.am_grupa=ag.id
     WHERE s.id = p_sredstvo_id
     FOR UPDATE WAIT 5;
+
+    IF v_status != 'aktivno' THEN
+        RAISE_APPLICATION_ERROR(
+            -20005,
+            'Amortizacija je dozvoljena samo za aktivna sredstva.'
+        );
+    END IF;
 
     IF v_datum_amortizacije IS NOT NULL AND
         EXTRACT(YEAR FROM v_datum_amortizacije) = EXTRACT(YEAR FROM SYSDATE)
