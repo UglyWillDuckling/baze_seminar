@@ -1,5 +1,8 @@
+# Seminar
 
-[[baze - seminar - imovina.canvas]]
+https://mermaid.ai/d/abbbc6b0-baff-4cc0-9f74-504ef0747d53
+
+## opis
 
 Implementirati primjer baze podataka za Evidencija imovine
 
